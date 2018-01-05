@@ -47,19 +47,32 @@ other files (like the "-interface" or frontend files).
 
 4. add `{"esversion": 6}` to .jshintrc
 
-5. `$ bower init`
+5. create local .gitignore file and add the following entries:
+  ```
+  node_modules/
+  build/
+  tmp/
+  bower_components/
+  *.css.map
+  .sass-cache/
 
-6. `$ node_modules/.bin/jasmine init`
+  ```
 
-7. in package.JSON add the following **(unless you're going to use Karma)**:
+6. Initialize bower in the command line with `$ bower init`
+
+7. Install jquery and bootstrap bower modules from command line with the following command: `$ bower install jquery bootstrap --save`
+
+8. `$ node_modules/.bin/jasmine init`
+
+9. in package.JSON add the following **(unless you're going to use Karma)**:
     ```
     "scripts": {
       "test": "jasmine"
     }
     ```
-8. `$ karma init` in the project directory
+10. `$ karma init` in the project directory
 
-9. Add the following to karma.conf.js (includes Babelify transform for Browserify):
+11. Add the following to karma.conf.js (includes Babelify transform for Browserify):
     ```
     module.exports = function(config) {
       config.set({
@@ -100,14 +113,14 @@ other files (like the "-interface" or frontend files).
     }
     ```
 
-10. Add the following to package.JSON:
+12. Add the following to package.JSON:
     ```
     "scripts" : {
       "test" : "karma start karma.conf.js"
     }
     ```
 
-11. Add the following tasks to gulpfile:
+13. Add the following tasks to gulpfile:
 
     1. Import `gulp`, `browserify`, `viny-source-stream`, and `babelify` at top of gulp file:
         ```
