@@ -44,3 +44,10 @@ gulp.task('minifyScripts', ['jsBrowserify'], function(){
 gulp.task('clean', function(){
   return del(['build', 'tmp']);
 });
+
+//'$ gulp jshint'
+gulp.task('jshint', function(){
+  return gulp.src(['js/*.js'])
+    .pipe(jshint())
+    .pipe(jshint.reporter('default'));
+});
