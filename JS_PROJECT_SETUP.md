@@ -60,7 +60,7 @@ other files (like the "-interface" or frontend files).
 
 6. Initialize bower in the command line with `$ bower init`
 
-7. Install jquery and bootstrap bower modules from command line with the following command: `$ bower install jquery bootstrap --save`
+7. Install bower modules from command line with the following command: `$ bower install jquery bootstrap --save`
 
 8. `$ node_modules/.bin/jasmine init`
 
@@ -122,7 +122,7 @@ other files (like the "-interface" or frontend files).
 
 13. Add the following tasks to gulpfile:
 
-    1. Import `gulp`, `browserify`, `viny-source-stream`, and `babelify` at top of gulp file:
+    1. Import `gulp`, `browserify`, `vinyl-source-stream`, and `babelify` at top of gulp file:
         ```
         var gulp = require('gulp');
         var browserify = require('browserify');
@@ -183,7 +183,7 @@ other files (like the "-interface" or frontend files).
       gulp.task('jshint', function(){
         return gulp.src(['js/*.js'])
           .pipe(jshint())
-          .pipe(jshint.reporter('defualt'));
+          .pipe(jshint.reporter('default'));
       });
       ```
 
