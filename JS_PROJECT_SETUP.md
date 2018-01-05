@@ -163,7 +163,7 @@ other files (like the "-interface" or frontend files).
 
     4. Import `gulp-jshint` at top of file:
       ```
-      var module = require('module');
+      var jshint = require('gulp-jshint');
       ```
       Add `jshint` task to gulpfile:
       ```
