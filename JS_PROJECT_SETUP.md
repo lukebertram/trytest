@@ -132,7 +132,7 @@ other files (like the "-interface" or frontend files).
       Add `jsBrowserify` task to gulpfile:
         ```
         gulp.task('jsBrowserify', ['concatInterface'], function() {
-          return browserify({ entries: ['.tmp/allConcat.js']})
+          return browserify({ entries: ['./tmp/allConcat.js']})
             .transform(babelify.configure({
               presets: ["es2015"]
             }))
