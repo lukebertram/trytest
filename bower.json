@@ -1,0 +1,17 @@
+{
+  "name": "js-boilerplate",
+  "description": "",
+  "main": "index.js",
+  "authors": [
+    "Luke Bertram <lukebertram@gmail.com>"
+  ],
+  "license": "ISC",
+  "homepage": "https://github.com/lukebertram/js-boilerplate",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

@@ -59,7 +59,7 @@ other files (like the "-interface" or frontend files).
     ```
 8. `$ karma init` in the project directory
 
-9. Add the following to karma.conf.js :
+9. Add the following to karma.conf.js (includes Babelify transform for Browserify):
     ```
     module.exports = function(config) {
       config.set({
@@ -83,6 +83,11 @@ other files (like the "-interface" or frontend files).
           'karma-jasmine-html-reporter'
         ],
 
+        browserify: {
+          debug: true,
+          transform: [ [ 'babelify', {presets: ["es2015"]} ] ]
+        },
+
         reporters: ['progress', 'kjhtml'],
         port: 9876,
         colors: true,
@@ -102,42 +107,156 @@ other files (like the "-interface" or frontend files).
     }
     ```
 
-11. Add babelify task to gulpfile:
-  ```
-  ...
-  var babelify = require("babelify");
-  ...
+11. Add the following tasks to gulpfile:
 
-  gulp.task('jsBrowserify', ['concatInterface'], function() {
-    return browserify({ entries: ['./tmp/allConcat.js']})
-      .transform(babelify.configure({
-        presets: ["es2015"]
-      }))
-      .bundle()
-      .pipe(source('app.js'))
-      .pipe(gulp.dest('./build/js'))
-  });
-  ```
+    1. Import `gulp`, `browserify`, `viny-source-stream`, and `babelify` at top of gulp file:
+        ```
+        var gulp = require('gulp');
+        var browserify = require('browserify');
+        var babelify = require('babelify');
+        var source = require('vinyl-source-stream');
+        ```
+      Add `jsBrowserify` task to gulpfile:
+        ```
+        gulp.task('jsBrowserify', ['concatInterface'], function() {
+          return browserify({ entries: ['.tmp/allConcat.js']})
+            .transform(babelify.configure({
+              presets: ["es2015"]
+            }))
+            .bundle()
+            .pipe(source('app.js'))
+            .pipe(gulp.dest('./build/js'))
+        });
+        ```
+    2. Import `gulp-concat` at top of file:
+      ```
+      var concat = require('gulp-concat');
+      ```
+      Add `concatInterface` task to gulpfile:
+      ```
+      gulp.task('concatInterface', function(){
+        return gulp.src(['js/*-interface.js'])
+          .pipe(concat('allConcat.js'))
+          .pipe(gulp.dest('./tmp'));
+        });
+      ```
 
-12. Add Babel configuration to karma.conf.js :
-  ```
-  module.exports = function(config) {
-    config.set({
-      ...
+    3. Import `gulp-uglify`, `gulp-util`, `del` and set `buildProduction` var at top of file:
+      ```
+      var uglify = require('gulp-uglify');
+      var utilities = require('gulp-util');
+      var buildProduction = utilities.env.production;
+      var del = require('del');
+      ```
+      Add `minifyScripts` and `clean` task to gulpfile:
+      ```
+      gulp.task('minifyScripts', ['jsBrowserify'], function() {
+        return gulp.src('build/js/app.js')
+          .pipe(uglify())
+          .pipe(gulp.dest('./build/js'));
+      });
 
-      preprocessors: {
-        ...
-      },
-      plugins: [
-        ...
-      ],
-      browserify: {
-        debug: true,
-        transform: [ [ 'babelify', {presets: ["es2015"]} ] ]
-      },
+      gulp.task('clean', function(){
+        return del(['build', 'tmp']);  
+      });
+      ```
 
-      ...
+    4. Import `gulp-jshint` at top of file:
+      ```
+      var module = require('module');
+      ```
+      Add `jshint` task to gulpfile:
+      ```
+      gulp.task('jshint', function(){
+        return gulp.src(['js/*.js'])
+          .pipe(jshint())
+          .pipe(jshint.reporter('defualt'));
+      });
+      ```
 
-    })
-  }
-  ```
+    5. Import `browser-sync`, `bower-files`, `gulp-sass` and `gulp-sourcemaps` at top of gulpfile:
+      ```
+      var browserSync = require('browser-sync').create();
+      var lib = require('bower-files') ({
+        "overrides":{
+          "main": [
+            "less/bootstrap.less",
+            "dist/css/bootstrap.css",
+            "dist/js/bootstrap.js"
+          ]
+        }
+      });
+      var sass = require('gulp-sass');
+      var sourcemaps = require('gulp-sourcemaps');
+      ```
+      Add Bower tasks `bower`,`bowerJS`, and `bowerCSS` as well as `cssConcat`, `build` and `cssBuild` to gulpfile:
+      ```
+      gulp.task('bower', ['bowerJS', 'cssConcat']);
+
+      gulp.task('bowerJS', function() {
+        return gulp.src(lib.ext('js').files)
+          .pipe(concat('vendor.min.js'))
+          .pipe(uglify())
+          .pipe(gulp.dest('./build/js'));
+      });
+
+      gulp.task('bowerCSS', function(){
+        return gulp.src(lib.ext('css').files)
+          .pipe(concat('vendor.css'))
+          .pipe(gulp.dest('./build/css'));
+      });
+
+      gulp.task('cssConcat', ['bowerCSS', 'cssBuild'], function() {
+        return gulp.src(['./build/css/vendor.css', './build/css/main.css'])
+          .pipe(concat('build.css'))
+          .pipe(gulp.dest('./build/css'))
+          .pipe(browserSync.stream());
+      });
+
+      gulp.task('cssBuild', function() {
+        return gulp.src('./scss/main.scss')
+          .pipe(sourcemaps.init())
+          .pipe(sass().on('error', sass.logError))
+          .pipe(sourcemaps.write())
+          .pipe(gulp.dest('./build/css'))
+      });
+
+      gulp.task('build', ['clean'], function(){
+        if (buildProduction) {
+          gulp.start('minifyScripts');
+        } else {
+          gulp.start('jsBrowserify');
+        }
+        gulp.start('bower');
+      });
+      ```
+
+    6. Add `serve` task and subtasks to gulpfile:
+      ```
+      gulp.task('serve', function() {
+        browserSync.init({
+          server: {
+            baseDir: "./",
+            index: "index.html"
+          }
+        });
+
+        gulp.watch(['js/*.js'], ['jsBuild']);
+        gulp.watch(['bower.json'], ['bowerBuild']);
+        gulp.watch(['*.html'], ['htmlBuild']);
+        gulp.watch(['scss/*.scss', 'scss/**/*.scss'], ['cssConcat']);
+
+      });
+
+      gulp.task('jsBuild', ['jsBrowserify', 'jshint'], function(){
+        browserSync.reload();
+      });
+
+      gulp.task('bowerBuild', ['bower'], function(){
+        browserSync.reload();
+      });
+
+      gulp.task('htmlBuild', function(){
+        browserSync.reload();
+      });
+      ```
